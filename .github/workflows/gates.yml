@@ -1,0 +1,40 @@
+name: gates
+on:
+  push:
+  pull_request:
+jobs:
+  lane1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: actions/setup-python@v5
+        with:
+          # Pinned to the interpreter the checked-in fixtures were actually
+          # generated and verified with (Python 3.14, the only interpreter
+          # available in this repo's dev environment). fixtures/generate.py
+          # drives its stream through random.Random(SEED); random() itself
+          # is a stable, documented CPython guarantee, but randint/choice
+          # route through _randbelow, which is NOT contractually stable
+          # across interpreter versions. A float to a newer/older minor
+          # version here is untested and could make
+          # fixtures/generate_test.sh's freshness diff fail in CI for a
+          # reason that looks like fixture staleness but is actually an
+          # interpreter difference. If this pin is ever bumped, first
+          # regenerate the fixtures on the new interpreter, confirm
+          # fixtures/generate_test.sh still reports byte-identical output
+          # against the checked-in fixtures, and only then move the pin --
+          # never bump it and let CI be the first place that finds out.
+          python-version: "3.14"
+      - name: run gates
+        env:
+          MERIDIAN_RUNNER: github-actions
+        run: sh gates/run.sh
+      - name: upload verdict rows
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verdicts
+          path: gates/out/
