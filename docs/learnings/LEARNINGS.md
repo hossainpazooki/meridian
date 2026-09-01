@@ -6,3 +6,4 @@ entry with a `kills:` reference, never edited.
 - [2026-09-01 — baseline GATE_VERDICT schema](2026-09-01-baseline-gate-verdict-schema.md) — the 16-key verdict row shape MERIDIAN's STATUS.md promises to emit.
 - [2026-09-01 — baseline hashes LF-normalized](2026-09-01-baseline-hashes-lf-normalized.md) — registration-seam hashes are over CRLF→LF bytes; raw-byte hashing on Windows false-positives.
 - [2026-09-01 — baseline twin rows carry `planted`](2026-09-01-baseline-twin-rows-carry-planted.md) — kills the "16 keys" wording: twin rows have a 17th key `planted` {mutation, mutated_rows, expected_violations}; live rows have 16.
+- [2026-09-01 -- vacuity guard denominator](2026-09-01-vacuity-guard-denominator.md) -- a guard keyed on the want-set size refused the one check that catches an invented position; the denominator is the universe examined, not the thing looked for.
