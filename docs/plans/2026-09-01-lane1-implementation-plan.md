@@ -40,7 +40,39 @@ Copied from the spec; every task's requirements include these.
 7. **Application order** within a visible prefix is `(effective, seq)` after dedupe and term resolution. Amendments are not applied as events; they only rewrite terms.
 8. **Positions with `qty == 0` are removed** from the snapshot (relief of the final share is exact, so `total_cost` is 0 there by construction — asserted).
 9. **`announced` / `processed` dates on an action are carried, not used.** Knowledge time is seq; the fields exist so the fixture reads like a real action record.
-10. Plan lives at `docs/plans/` (committed) rather than the gitignored `docs/superpowers/plans/` because the executor may run from the web where only the remote exists.
+10. **Expected-view files use the snapshot schema key `feed_seq`, not `seq`.**
+    Corrected 2026-09-01 during execution: the original text specified `seq`,
+    which made `leaf_diff`/`snapshot.Diff` charge one phantom leaf on EVERY
+    comparison (the key is absent from every snapshot document). That inflated
+    the published twin footprints by one, made the generator's hollow-twin
+    guards unreachable (`leaf_diff` had a hard floor of 1, so `if k == 0: die`
+    could never fire), and would have made P1's and P3's live cells
+    permanently RED. Measured: live diff 1 -> 0, k1 8 -> 7, k3 4 -> 3.
+11. **`Diff` is one-sided by design, so every gate must ALSO assert key-set
+    equality.** Added 2026-09-01 during execution. `snapshot.Diff` walks the
+    golden's keys only, which is required — a twin document legitimately
+    carries keys (`absorbed`, `refusals`, `unevaluable`, `feed_prefix_hash`,
+    `unrealized_pnl`) that a reduced golden never has. The consequence,
+    measured: a ledger that INVENTS a position, or that fails to mark an
+    instrument `unevaluable`, scores 0 mismatches and passes every gate.
+    Diff must NOT be made two-sided. Instead `fixtures/base/manifest.json`
+    publishes `positions_at.{V1,V2,V3}` and `unevaluable_at.V3` (sorted
+    instrument lists, computed and self-asserted by the generator), and each
+    gate adds a check comparing the document's actual key sets against them.
+    A gate that only diffs golden leaves is not complete.
+12. **`snapshot.Build` returns an error; it must not panic.** Corrected
+    2026-09-01 during execution. The plan had `Build` panic on a marshal
+    error, justified as "doc is built from primitives only" — true until
+    decision 10 hardened `canon.Marshal` to refuse non-ASCII strings. After
+    that, a feed carrying a non-ASCII instrument name or event id reaches
+    `Build` through `feed.Open` -> `canon.Decode` (which does not validate
+    string content) -> `fold` (no ASCII check) and panics. Measured:
+    `canon: non-ASCII rune 'É' in string "AAÉ" at .positions.AAÉ (key)`.
+    A crash on hostile or corrupt data contradicts the fold's own "malformed
+    becomes a refusal, never an error" invariant. Defended at three layers:
+    `feed.Open` enforces canonicality at ingress, `fold` refuses
+    uncanonicalizable payloads, and `Build` returns an error.
+13. Plan lives at `docs/plans/` (committed) rather than the gitignored `docs/superpowers/plans/` because the executor may run from the web where only the remote exists.
 
 ---
 
@@ -106,7 +138,7 @@ fixtures/
   generate.py
   base/feed.jsonl            seeded portfolio; contains planted dup + collision; CCC price withheld
   base/manifest.json         seeds, seqs, viewpoints, planted counts (schema in Task 9)
-  base/expected/V1.json      naive-fold state at viewpoint V1  {"cash","dividend_income","positions":{I:{"qty","total_cost"}},"realized_pnl","seq"}
+  base/expected/V1.json      naive-fold state at viewpoint V1  {"cash","dividend_income","positions":{I:{"qty","total_cost"}},"realized_pnl","feed_seq"}
   base/expected/V2.json, V3.json
   base/statement.json        custodian format {"as_of_seq":N,"cash":int,"holdings":[{"cost_basis":int,"instrument":"AAA","quantity":int}]}
   base/snapshot.sha256       PINNED by Go once (Task 11), not by the generator
@@ -2516,7 +2548,7 @@ def naive_fold(records, up_to, mode="honest"):
 def expected_view(doc):
     return {"cash": doc["cash"], "dividend_income": doc["dividend_income"],
             "positions": {i: {"qty": p["qty"], "total_cost": p["total_cost"]} for i, p in doc["positions"].items()},
-            "realized_pnl": doc["realized_pnl"], "seq": doc["feed_seq"]}
+            "realized_pnl": doc["realized_pnl"], "feed_seq": doc["feed_seq"]}
 
 
 def statement(doc):

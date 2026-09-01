@@ -76,6 +76,13 @@ never carries counts.
 - **No production claim.** This is a demonstration of properties, not a system
   that has run anywhere that matters.
 
+## Run the gates
+
+    python fixtures/generate.py   # regenerate fixtures (deterministic; CI checks freshness)
+    sh gates/run.sh               # every live gate green, every twin red for its planted reason
+
+Claim state is in [STATUS.md](STATUS.md).
+
 ## Lineage
 
 MERIDIAN is an instrument of **DATUM** — a shared reference frame for
