@@ -1,0 +1,5 @@
+/gates/out/
+/bin/
+/fixtures/.regen/
+__pycache__/
+/meridian.exe
