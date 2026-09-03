@@ -185,8 +185,15 @@ would falsify it.
   (5) two comparison legs are never driven non-zero by any twin: the
   `records` leg of `head_matches_local` and the `compared` leg of
   `reconcile_matches_local` (both twins keep 71 records and compare 11
-  fields), so their zeros are not evidence; (6) the `proto fresh` step has
-  only ever run on Windows until this branch's first CI run.
+  fields), so their zeros are not evidence; (6) the `proto fresh` step had
+  only ever run on Windows when this was written. Narrowed 2026-09-03 after
+  the push: CI runs 33815809956 (push) and 33815870881 (pull_request) on
+  `4d2b21d`, `ubuntu-24.04`, Go 1.26, Python 3.14, printed `ok proto fresh`
+  (buf and its module graph fetched from the Go module proxy on the cold
+  runner and built there, about 75 s between the import-pin line and the
+  proto-fresh line) and
+  `ok lane1 claimable=7/7` with the P7 row, so the codegen pin and the
+  seven cells reproduce on Linux as well as Windows.
 
 - **No production claim.** Synthetic, versioned fixtures only. The ledger has
   run nowhere that matters, against no market data, no custodian, and no

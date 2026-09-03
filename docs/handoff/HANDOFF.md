@@ -16,3 +16,6 @@ session writes a new entry, never edits an old one.
   read-only gRPC API + P7 wire-fidelity gate built on `p7-grpc-read-api`
   (`ok lane1 claimable=7/7`, 18 rows), review chain closed MERGEABLE; ALL
   UNCOMMITTED, CI unmeasured; operator commit sequence inside.
+- [2026-09-03 -- p7-merged](2026-09-03-p7-merged.md) -- PR #2 merged at
+  `ecdd82d`, CI green on ubuntu-24.04 (run 33816126081); one docs commit
+  `9898cba` still on the branch, lands with this entry.
