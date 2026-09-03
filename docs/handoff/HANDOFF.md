@@ -19,3 +19,6 @@ session writes a new entry, never edits an old one.
 - [2026-09-03 -- p7-merged](2026-09-03-p7-merged.md) -- PR #2 merged at
   `ecdd82d`, CI green on ubuntu-24.04 (run 33816126081); one docs commit
   `9898cba` still on the branch, lands with this entry.
+- [2026-09-03 -- p7-closed](2026-09-03-p7-closed.md) -- everything landed on
+  `main` at `014992e` (PRs #1-#3 merged); clean anchor for the next pick-up;
+  next = BASELINE registration of the seven cells.
