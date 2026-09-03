@@ -1,11 +1,20 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	meridianv1 "github.com/hossainpazooki/meridian/api/meridian/v1"
+	"github.com/hossainpazooki/meridian/internal/reader"
 )
 
 func build(t *testing.T) string {
@@ -267,5 +276,58 @@ func blankFlag(args []string, flag string) {
 			args[i+1] = ""
 			return
 		}
+	}
+}
+
+func TestServeAnswersHeadOverTCP(t *testing.T) {
+	bin := build(t)
+	feedPath := filepath.Join("..", "..", "fixtures", "base", "feed.jsonl")
+	cmd := exec.Command(bin, "serve", "--feed", feedPath, "--listen", "127.0.0.1:0")
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = cmd.Process.Kill(); _ = cmd.Wait() }()
+	line, err := bufio.NewReader(stdout).ReadString('\n')
+	if err != nil {
+		t.Fatalf("no listening line: %v", err)
+	}
+	if !strings.HasPrefix(line, "listening addr=") {
+		t.Fatalf("first stdout line = %q", line)
+	}
+	addr := strings.TrimSpace(strings.TrimPrefix(line, "listening addr="))
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	h, err := meridianv1.NewReaderClient(conn).Head(ctx, &meridianv1.HeadRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, _ := reader.FeedReader{Path: feedPath}.Head(ctx)
+	if h.GetRecords() != want.Records || h.GetPrefixHash() != want.PrefixHash {
+		t.Fatalf("Head over TCP = %v, want %+v", h, want)
+	}
+}
+
+func TestServeRefusesMissingFeedAndCreatesNothing(t *testing.T) {
+	bin := build(t)
+	missing := filepath.Join(t.TempDir(), "nope.jsonl")
+	stdout, stderr, code := runSplit(t, bin, "serve", "--feed", missing)
+	if code != 1 || stdout != "" || !strings.Contains(stderr, "feed does not exist") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
+	if _, err := os.Stat(missing); !os.IsNotExist(err) {
+		t.Fatal("serve created the missing feed")
+	}
+	_, stderr, code = runSplit(t, bin, "serve")
+	if code != 1 || !strings.Contains(stderr, "--feed") {
+		t.Fatalf("serve without --feed: code=%d stderr=%q", code, stderr)
 	}
 }
