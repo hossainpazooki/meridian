@@ -1,6 +1,7 @@
 package asof
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -69,5 +70,28 @@ func TestReadDoesNotPanicOnHostileFeedContent(t *testing.T) {
 	}
 	if _, err := Read(path, -1); err == nil {
 		t.Fatal("expected Read to return an error for hostile feed content, got nil")
+	}
+}
+
+func TestReadFromEqualsRead(t *testing.T) {
+	path := filepath.Join("..", "..", "fixtures", "base", "feed.jsonl")
+	viaPath, err := Read(path, -1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := feed.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	viaFeed, err := ReadFrom(f, -1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(viaPath.Bytes, viaFeed.Bytes) || viaPath.Hash != viaFeed.Hash || viaPath.Seq != viaFeed.Seq {
+		t.Fatalf("ReadFrom diverges from Read: %s vs %s", viaPath.Hash, viaFeed.Hash)
+	}
+	if _, err := ReadFrom(f, f.Len()+1); err == nil {
+		t.Fatal("seq past end must error")
 	}
 }
