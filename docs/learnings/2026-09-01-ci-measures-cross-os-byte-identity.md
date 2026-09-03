@@ -1,0 +1,7 @@
+ts: 2026-09-01T21:26:38Z
+commit: f8825ba
+session: claude-code meridian lane1 build (925a8227-a1e8-4e15-b0f6-949ecb97006f)
+status: verified
+fact: MERIDIAN's canonical snapshot bytes and its generated fixtures reproduce byte-identically across operating systems, not just across processes on one machine. The pinned base snapshot hash `sha256:9d353431...` matched on ubuntu-24.04 exactly as on Windows, and `fixtures/generate_test.sh` regenerated the seven fixture trees byte-identically there. This upgrades P2's cross-OS leg from unmeasured to measured, and narrows the interpreter-dependence limit: the OS leg is settled, only other Python MINORS remain unverified. The first CI run of a repository is the moment a whole class of "unmeasured" claims becomes measurable, and a state-of-record written before it will understate the evidence until someone re-reads it.
+basis: `gh run view 33559490763 --log` on the merge commit shows `Image: ubuntu-24.04`, `python-version: 3.14`, then `ok fixtures deterministic and fresh`, `ok import-pin fixtures/generate.py`, `ok import-pin self-test (all negative controls caught)`, the six-row claimability table with every property `YES`, and `ok lane1 claimable=6/6`. `gh run list --workflow gates --limit 3` shows three successes: 33558902926 (push, lane1-build), 33559063650 (pull_request), 33559490763 (push, main).
+re-verify: gh run view 33559490763 --log | grep -E "ubuntu-24.04|python-version: 3.14|ok lane1 claimable"

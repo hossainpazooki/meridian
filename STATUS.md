@@ -14,21 +14,26 @@ claimable anywhere unless it is claimable here.
   live + three twins). Every live cell GREEN, every twin cell RED for exactly
   its planted reason with exact counts.
 
-  **The evidence is uncommitted.** It lives in an untracked, dirty working
-  tree on branch `lane1-build`. The newest commit is
-  `fbc19b3bf95e5f761070415901cef6ab79f1df87` (`docs: lane-1 implementation
-  plan + twin-row planted-key learning`), which predates the entire build --
-  `cmd/`, `internal/`, `gates/`, `fixtures/`, `go.mod`, `.github/` and
-  `.gitignore` are all untracked, as are this session's new `docs/` files, and
-  `README.md`, `STATUS.md` and three `docs/` files are modified. **No commit
-  contains this build, and nothing has been pushed.** In this project only the
-  human operator writes git history.
+  **The evidence is committed and pushed.** Corrected 2026-09-03 at
+  pick-up: an earlier version of this paragraph said the build lived only
+  in an untracked working tree on `lane1-build` and that nothing had been
+  pushed. That was true when written. The build landed in four
+  evidence-first commits (`527f571` core, `b7f8cf5` fixtures, `70479fe`
+  gates + CI, `be1101d` docs) and merged to `main` as PR #1 at `f8825ba`;
+  `main` is level with `origin/main`. In this project only the human
+  operator writes git history.
 
-  **CI has never run.** `.github/workflows/gates.yml` is untracked, so it has
-  never reached GitHub; `gh run list` returns no runs for this repository.
-  The `ok lane1 claimable=6/6` above is a **local** result on Windows only.
-  The cross-OS leg of P2's byte-identity claim is therefore **unmeasured**, not
-  green.
+  **CI has now run, and P2's cross-OS leg is measured.** Corrected
+  2026-09-01 after the merge: an earlier version of this entry said CI had
+  never run and that the cross-OS leg was unmeasured, which was true when it
+  was written and is no longer. `gates` run
+  [33559490763](https://github.com/hossainpazooki/meridian/actions/runs/33559490763)
+  on the merge commit `f8825ba` succeeded on `ubuntu-24.04` under Python
+  3.14, printing `ok fixtures deterministic and fresh`, `ok import-pin
+  self-test (all negative controls caught)`, and `ok lane1 claimable=6/6`
+  with the same six rows. So the pinned snapshot hash reproduces on Linux as
+  well as Windows, and the fixtures regenerate byte-identically there.
+  Two earlier runs (33558902926 push, 33559063650 pull_request) also passed.
 
   Verdict rows are **regenerated on every run and are not committed** --
   `/gates/out/` is in `.gitignore`. They are build output, not a record; the
@@ -132,9 +137,13 @@ would falsify it.
   CI pins that exact version. `fixtures/generate.py` drives its stream through
   `random.Random`, whose `randint` and `choice` are **not** contractually
   stable across CPython versions (only `getrandbits`/`random()` are). On a
-  different interpreter the fixtures may not reproduce.
+  different interpreter MINOR the fixtures may not reproduce.
   `fixtures/generate_test.sh` is the detector -- and a failure there would
   present as fixture staleness, not as an interpreter difference.
+  Narrowed 2026-09-01: the fixtures are now known to reproduce byte-identically
+  on **two operating systems** under Python 3.14 (Windows locally, ubuntu-24.04
+  in CI run 33559490763). What remains unverified is any OTHER Python minor;
+  the OS leg is no longer in doubt.
 
 - **No production claim.** Synthetic, versioned fixtures only. The ledger has
   run nowhere that matters, against no market data, no custodian, and no
