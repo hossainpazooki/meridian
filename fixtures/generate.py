@@ -921,6 +921,48 @@ def main():
         die("P6 phantom-position twin is not confined to the position set: unevaluable_match_golden measured %d, want 0" % p6phantom_unevaluable_match)
     write_json(P("p6", "twin-phantom", "snapshot.json"), p6_phantom)
 
+    # ----- P7 twins: wire fidelity -----
+    # Twin 1 (wrong_feed_served_as_base) is the Go gate serving
+    # fixtures/p2/mutated/feed.jsonl to a client that believes it is the base
+    # feed. Every expectation below is MEASURED from the two feeds, never
+    # asserted; each guard says why the number could not be anything else.
+    p7_viewpoints = ["V1", "V2", "V3"]
+    p7_vseqs = [V1, V2, V3]
+    # head_matches_local examines two fields: records and prefix_hash. The
+    # mutated feed keeps the record count and re-chains, so exactly one of
+    # the two differs. Both halves are checked, not assumed.
+    if len(mut_recs) != N:
+        die("P7 wrong-feed twin changed the record count (%d vs %d); head_matches_local footprint assumes records equal" % (len(mut_recs), N))
+    if mut_recs[-1]["line_hash"] == recs[-1]["line_hash"]:
+        die("P7 wrong-feed twin has the base feed's prefix hash; head_matches_local would read 0")
+    p7_head = 1
+    # snapshot_matches_local_recompute: a viewpoint at or past the mutated
+    # seq yields different bytes (feed_prefix_hash alone guarantees it); a
+    # viewpoint BEFORE it would be byte-identical and must not be counted.
+    p7_mutated_seq = mi + 1
+    p7_recompute = sum(1 for v in p7_vseqs if v >= p7_mutated_seq)
+    if p7_recompute != len(p7_vseqs):
+        die("P7 wrong-feed twin: a viewpoint precedes the mutated seq %d, so snapshot_matches_local_recompute cannot cover every viewpoint" % p7_mutated_seq)
+    # reconcile_matches_local: the Go server reconciles ITS snapshot (the
+    # mutated fold at end_seq) against the BASE statement; the local side
+    # reconciles the base snapshot against the same statement and finds
+    # nothing (P5 live). The symmetric difference is therefore the server's
+    # own mismatch list: one entry per (instrument, field) pair that differs,
+    # plus one for cash if it differs. holdings_diff's "*presence*" marker
+    # would map to TWO Go mismatches (quantity and cost_basis), so the
+    # position sets must be equal for this count to mean what it says.
+    mut_st = statement(mut_fold)
+    p7_pairs = holdings_diff(honest_st["holdings"], mut_st["holdings"])
+    if any(field == "*presence*" for _, field in p7_pairs):
+        die("P7 wrong-feed twin changed the position set: %r" % p7_pairs)
+    p7_reconcile = len(p7_pairs) + (1 if mut_st["cash"] != honest_st["cash"] else 0)
+    if p7_reconcile == 0:
+        die("P7 wrong-feed twin leaves cash and every holding untouched; reconcile_matches_local would prove nothing")
+    # Twin 2 (hash_field_mislabeled) serves correct bytes with a wrong
+    # snapshot_hash on every AsOf answer, so the rehash check fires once per
+    # viewpoint and nothing else moves.
+    p7_mislabeled = len(p7_vseqs)
+
     # ----- manifest -----
     man = {
         "seed": SEED, "instruments": INSTRUMENTS, "end_seq": N,
@@ -955,6 +997,13 @@ def main():
                               "expected_violations": {"golden_match": 3, "positions_match_golden": p6price_positions_match, "unevaluable_match_golden": p6price_unevaluable_match}},
                "twin_phantom": {"instrument": "ZZZ", "mutation": "invented_untraded_position",
                                  "expected_violations": {"positions_match_golden": p6phantom_positions_match, "unevaluable_match_golden": p6phantom_unevaluable_match}}},
+        "p7": {"viewpoints": p7_viewpoints, "wrong_feed": "p2/mutated/feed.jsonl",
+               "twin_wrong_feed": {"mutation": "wrong_feed_served_as_base", "mutated_rows": 1,
+                                   "expected_violations": {"head_matches_local": p7_head, "snapshot_rehash_matches_claimed": 0,
+                                                            "snapshot_matches_local_recompute": p7_recompute, "reconcile_matches_local": p7_reconcile}},
+               "twin_mislabeled": {"mutation": "hash_field_mislabeled",
+                                   "expected_violations": {"head_matches_local": 0, "snapshot_rehash_matches_claimed": p7_mislabeled,
+                                                            "snapshot_matches_local_recompute": 0, "reconcile_matches_local": 0}}},
     }
     write_json(P("base", "manifest.json"), man)
     print("ok base_end_seq=%d p6_end_seq=%d" % (N, len(r6)))
