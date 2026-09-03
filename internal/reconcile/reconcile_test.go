@@ -3,6 +3,7 @@ package reconcile
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/hossainpazooki/meridian/internal/snapshot"
@@ -108,5 +109,32 @@ func TestReconcileFailsClosedOnMissingPositionsKey(t *testing.T) {
 	}
 	if len(ms) != 0 {
 		t.Fatalf("expected zero mismatches on error, got %+v", ms)
+	}
+}
+
+func TestLoadStatementBytesMatchesLoadStatement(t *testing.T) {
+	path := filepath.Join("..", "..", "fixtures", "base", "statement.json")
+	fromPath, err := LoadStatement(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fromBytes, err := LoadStatementBytes(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(fromPath, fromBytes) {
+		t.Fatalf("path %+v != bytes %+v", fromPath, fromBytes)
+	}
+}
+
+func TestLoadStatementBytesRefusesNonObjectAndBadJSON(t *testing.T) {
+	for _, raw := range []string{"[]", "{", "", `{"as_of_seq":1,"cash":0}`} {
+		if _, err := LoadStatementBytes([]byte(raw)); err == nil {
+			t.Fatalf("%q: expected error", raw)
+		}
 	}
 }

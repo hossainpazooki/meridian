@@ -35,12 +35,19 @@ func asInt(v any) (int64, error) {
 	return num.Int64()
 }
 
-// LoadStatement reads the custodian JSON format.
+// LoadStatement reads the custodian JSON format from a file.
 func LoadStatement(path string) (Statement, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return Statement{}, err
 	}
+	return LoadStatementBytes(raw)
+}
+
+// LoadStatementBytes parses the custodian JSON format from bytes. This is
+// the one statement schema; the gRPC read API passes statements as bytes
+// so it shares this parser rather than carrying a second one.
+func LoadStatementBytes(raw []byte) (Statement, error) {
 	v, err := canon.Decode(raw)
 	if err != nil {
 		return Statement{}, err
