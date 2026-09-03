@@ -17,7 +17,7 @@ import os
 import re
 import sys
 
-PROPS = [1, 2, 3, 4, 5, 6]
+PROPS = [1, 2, 3, 4, 5, 6, 7]
 
 
 def load(dirpath):
@@ -165,7 +165,7 @@ def main():
                 print("WARN P%d is supported by verdicts but STATUS.md does not mark it CLAIMABLE" % p)
     if bad:
         return 1
-    print("ok lane1 claimable=%d/6" % k)
+    print("ok lane1 claimable=%d/7" % k)
     return 0
 
 

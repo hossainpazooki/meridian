@@ -25,6 +25,13 @@ func Read(feedPath string, seq int64) (Result, error) {
 		return Result{}, err
 	}
 	defer f.Close()
+	return ReadFrom(f, seq)
+}
+
+// ReadFrom folds [1..seq] of an already-open feed and builds the snapshot.
+// seq < 0 selects the last record. It exists so a caller that has already
+// opened the feed (to check its length, say) does not pay a second scan.
+func ReadFrom(f *feed.Feed, seq int64) (Result, error) {
 	if seq < 0 {
 		seq = f.Len()
 	}

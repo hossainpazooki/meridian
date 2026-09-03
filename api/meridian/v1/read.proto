@@ -1,0 +1,56 @@
+// MERIDIAN read API. Read-only by construction: this service has exactly
+// three unary methods and none of them writes. A write path would drag
+// transport into P1's at-most-once claim (design Q5, 2026-08-31).
+syntax = "proto3";
+
+package meridian.v1;
+
+option go_package = "github.com/hossainpazooki/meridian/api/meridian/v1;meridianv1";
+
+service Reader {
+  // Head returns the feed length and the prefix hash of the whole feed
+  // (what `meridian replay` prints).
+  rpc Head(HeadRequest) returns (HeadResponse);
+  // AsOf replays the prefix [1..seq] and returns the canonical snapshot
+  // bytes verbatim plus their sha256. seq < 0 means end of feed.
+  rpc AsOf(AsOfRequest) returns (AsOfResponse);
+  // Reconcile compares the snapshot at seq with a custodian statement
+  // (the same JSON bytes `meridian reconcile --statement` loads).
+  rpc Reconcile(ReconcileRequest) returns (ReconcileResponse);
+}
+
+message HeadRequest {}
+
+message HeadResponse {
+  int64 records = 1;
+  string prefix_hash = 2;  // "sha256:<hex>"
+}
+
+message AsOfRequest {
+  int64 seq = 1;  // < 0 means end of feed
+}
+
+message AsOfResponse {
+  int64 seq = 1;            // resolved seq (a -1 request answers with the real end seq)
+  string prefix_hash = 2;   // "sha256:<hex>" of the feed prefix [1..seq]
+  string snapshot_hash = 3; // "sha256:<hex>" over `snapshot` exactly as sent
+  bytes snapshot = 4;       // canonical JSON + '\n', byte-identical to `meridian asof`
+}
+
+message ReconcileRequest {
+  int64 seq = 1;
+  bytes statement = 2;  // custodian statement JSON object
+}
+
+message Mismatch {
+  string instrument = 1;  // empty for the cash field
+  string field = 2;       // "cash" | "quantity" | "cost_basis"
+  int64 ledger = 3;
+  int64 custodian = 4;
+  int64 delta = 5;        // ledger - custodian
+}
+
+message ReconcileResponse {
+  int64 compared = 1;
+  repeated Mismatch mismatches = 2;
+}

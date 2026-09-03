@@ -1,7 +1,8 @@
 // Command meridian is the thin CLI over the internal packages. It holds no
 // logic of its own: append writes to the feed, replay verifies it, snapshot /
-// asof recompute, reconcile compares. Exit codes: 0 ok, 1 usage or mismatch
-// or other error, 2 feed chain error.
+// asof recompute, reconcile compares, serve answers the three read RPCs over
+// gRPC. Exit codes: 0 ok, 1 usage or mismatch or other error, 2 feed chain
+// error.
 //
 // "Holds no logic of its own" draws a specific line at append's input
 // checking: requireNonEmpty rejects a blank --type/--id/--effective because
@@ -20,15 +21,24 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
+	"google.golang.org/grpc"
+
+	meridianv1 "github.com/hossainpazooki/meridian/api/meridian/v1"
 	"github.com/hossainpazooki/meridian/internal/asof"
 	"github.com/hossainpazooki/meridian/internal/canon"
 	"github.com/hossainpazooki/meridian/internal/feed"
+	"github.com/hossainpazooki/meridian/internal/reader"
+	"github.com/hossainpazooki/meridian/internal/readgrpc"
 	"github.com/hossainpazooki/meridian/internal/reconcile"
 	"github.com/hossainpazooki/meridian/internal/snapshot"
 )
@@ -95,7 +105,7 @@ func requireFeedExists(path string) error {
 
 func runCLI(args []string) int {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "usage: meridian <append|replay|snapshot|asof|reconcile> [flags]")
+		fmt.Fprintln(os.Stderr, "usage: meridian <append|replay|snapshot|asof|reconcile|serve> [flags]")
 		return 1
 	}
 	fs := flag.NewFlagSet(args[0], flag.ContinueOnError)
@@ -200,6 +210,36 @@ func runCLI(args []string) int {
 		fmt.Printf("mismatches=%d compared=%d\n", len(ms), compared)
 		if len(ms) > 0 {
 			return 1
+		}
+	case "serve":
+		// Read-only gRPC over the feed. Nothing here writes: the service
+		// has three read methods (api/meridian/v1/read.proto) and this
+		// command has no flag that mutates anything.
+		listen := fs.String("listen", "127.0.0.1:0", "listen address (host:port; port 0 picks a free port). No auth, no TLS: keep it on loopback unless you know why not.")
+		if err := fs.Parse(args[1:]); err != nil {
+			return 1
+		}
+		if *feedPath == "" {
+			return fail(errors.New("missing required flag(s): --feed"))
+		}
+		if err := requireFeedExists(*feedPath); err != nil {
+			return fail(err)
+		}
+		lis, err := net.Listen("tcp", *listen)
+		if err != nil {
+			return fail(err)
+		}
+		srv := grpc.NewServer()
+		meridianv1.RegisterReaderServer(srv, readgrpc.New(reader.FeedReader{Path: *feedPath}))
+		fmt.Printf("listening addr=%s\n", lis.Addr().String())
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		go func() {
+			<-ctx.Done()
+			srv.GracefulStop()
+		}()
+		if err := srv.Serve(lis); err != nil {
+			return fail(err)
 		}
 	default:
 		fmt.Fprintln(os.Stderr, "unknown command:", args[0])
