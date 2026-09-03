@@ -12,3 +12,7 @@ session writes a new entry, never edits an old one.
 - [2026-09-01 -- lane1-merged](2026-09-01-lane1-merged.md) -- PR #1 merged
   at `f8825ba`; CI green on ubuntu-24.04, so P2's cross-OS leg is now MEASURED;
   gRPC read API unblocked; three checks still unfalsified.
+- [2026-09-03 -- p7-grpc-read-api-built](2026-09-03-p7-grpc-read-api-built.md) --
+  read-only gRPC API + P7 wire-fidelity gate built on `p7-grpc-read-api`
+  (`ok lane1 claimable=7/7`, 18 rows), review chain closed MERGEABLE; ALL
+  UNCOMMITTED, CI unmeasured; operator commit sequence inside.

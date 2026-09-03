@@ -40,6 +40,17 @@ claimable anywhere unless it is claimable here.
   record is this file. Twin counts per property live in
   `fixtures/base/manifest.json` under `p<N>.twin.expected_violations`.
 
+- **2026-09-03** -- P7 (wire fidelity of the gRPC read API) built. `sh
+  gates/run.sh` ends `ok lane1 claimable=7/7` over **18 verdict rows** (the
+  15 above plus P7: one live + two twins). The API is `Head` / `AsOf` /
+  `Reconcile`, read-only by construction of `api/meridian/v1/read.proto`
+  (a descriptor test pins exactly those three unary methods). The gate is a
+  gRPC client over an in-process listener that rehashes the bytes it
+  receives and recomputes locally; twin 1 serves `fixtures/p2/mutated` as
+  if it were base (self-consistent hashes, wrong content), twin 2 serves the
+  right bytes under the wrong `snapshot_hash`. Design:
+  `docs/2026-09-03-grpc-read-api-design.md`.
+
 ## Crediting rule
 
 A property is **CLAIMABLE** only when both halves hold, as mechanically
@@ -56,7 +67,7 @@ label) and, at emit time, by `Emit` in `gates/verdict.go`:
   both key sets, so an expectation with no computed check and a computed check
   with no expectation are both refusals), and at least one check non-zero.
 
-**P4 has two twins and P6 has three, and all of them must hold** -- one red
+**P4 and P7 have two twins each and P6 has three, and all of them must hold** -- one red
 twin does not credit a property that plants three defects. A gate that has
 never run red proves nothing.
 
@@ -76,27 +87,31 @@ copy, not a translation.
 | P4 | Fail-closed valuation (2 twins) | GREEN | RED | CLAIMABLE |
 | P5 | Reconciliation proven able to fail | GREEN | RED | CLAIMABLE |
 | P6 | Portfolio math (average cost, P&L) (3 twins) | GREEN | RED | CLAIMABLE |
+| P7 | Wire fidelity of the gRPC read API (2 twins) | GREEN | RED | CLAIMABLE |
 
 Every RED above is red **for its planted reason with its exact planted
 counts**; a merely-red twin does not credit a cell.
 
 The Twin column holds one word per property because that is the schema
-`gates/claimability.py` parses, but **P4 has two twin rows and P6 has three**,
-and a single RED there means **every** one of them went red as planted -- the
-counts are in the dated entry above and the per-twin rows in `gates/out/`.
+`gates/claimability.py` parses, but **P4 and P7 have two twin rows each and P6
+has three**, and a single RED there means **every** one of them went red as
+planted -- the counts are in the dated entry above and the per-twin rows in
+`gates/out/`.
 P4's twins are `silent_zero_and_stale_carry_forward` and
 `valuation_omitted_without_declaring_unevaluable`; P6's are `fill_qty_plus_one`,
-`price_plus_one` and `invented_untraded_position`.
+`price_plus_one` and `invented_untraded_position`. P7's are
+`wrong_feed_served_as_base` and `hash_field_mislabeled`.
 
 ## Honest limits
 
-Measured facts about what the six cells above do and do not establish. These
+Measured facts about what the seven cells above do and do not establish. These
 are not caveats added for modesty -- each one was found by measurement during
 the build, and each bounds a claim that would otherwise be read as stronger
 than the evidence. **The first four trace to an entry in
 `docs/2026-09-01-lane1-build-ledger.md`, which records the measurement that
-established each** -- so they are checkable rather than merely asserted. The
-fifth (no production claim) is not a finding at all: it is a scope wall
+established each, and the fifth (P7) to the 2026-09-03 design and final
+review** -- so they are checkable rather than merely asserted. The
+sixth (no production claim) is not a finding at all: it is a scope wall
 declared in `docs/2026-08-31-design.md` section 6 before any code existed, and
 it is checkable a different way -- by the absence of anything in the repo that
 would falsify it.
@@ -145,6 +160,34 @@ would falsify it.
   in CI run 33559490763). What remains unverified is any OTHER Python minor;
   the OS leg is no longer in doubt.
 
+- **P7 measures an in-process listener, not a network.** Its verdict rows
+  come from a `bufconn` transport inside one test process. Nothing is
+  claimed about TCP behaviour under load, TLS, authentication,
+  authorisation, concurrency, or backpressure. `meridian serve` over
+  loopback TCP is exercised by one smoke test (`Head` answered over the
+  wire) that emits no row and ends the process with a kill, so graceful
+  stop on SIGINT/SIGTERM is untested (Windows cannot deliver those signals
+  to a child process). "Read-only" is a statement about the proto -- three
+  methods, all reads, pinned by a descriptor test -- not about the serving
+  process's filesystem permissions.
+  Measured at final review 2026-09-03, none fixed, all stated: (1) a read
+  opens the feed read-write -- `feed.Open` runs `os.MkdirAll` and opens with
+  `O_CREATE|O_RDWR`, so `serve` needs write permission on the feed to answer
+  reads and would fail on a read-only mount; (2) the exists-then-open guard
+  in `FeedReader` has a race the one-shot CLI did not: delete the feed
+  between the stat and the open and the server creates an empty feed and
+  answers a clean empty ledger; (3) no message-size bound is set, so gRPC's
+  4 MB client default caps the snapshot `AsOf` can deliver, and a ledger
+  past it would fail with a code absent from the design's status table (the
+  base feed is 16 KB; the boundary is unmeasured); (4) a statement's
+  `as_of_seq` is parsed and never compared to the requested seq, in the
+  gRPC path exactly as in the CLI -- pre-existing, now remotely reachable;
+  (5) two comparison legs are never driven non-zero by any twin: the
+  `records` leg of `head_matches_local` and the `compared` leg of
+  `reconcile_matches_local` (both twins keep 71 records and compare 11
+  fields), so their zeros are not evidence; (6) the `proto fresh` step has
+  only ever run on Windows until this branch's first CI run.
+
 - **No production claim.** Synthetic, versioned fixtures only. The ledger has
   run nowhere that matters, against no market data, no custodian, and no
   counterparty.
@@ -167,7 +210,8 @@ would falsify it.
   taken** in Lane 1 because `prev` is a cross-language contract and the Python
   generator was mid-hardening. Awaiting an operator decision; see
   `docs/handoff/2026-09-01-lane1-build.md`.
-- gRPC read API -- revisit after P1-P3 are green; read-only if built.
+- gRPC read API -- **resolved** 2026-09-03: built read-only as P7; see the
+  dated entry above and `docs/2026-09-03-grpc-read-api-design.md`.
 - Cross-language byte-identical twin -- v2 candidate once the snapshot format
   is stable.
 - Whether `canon.Marshal` should ever accept non-ASCII (it refuses today, by

@@ -80,6 +80,7 @@ never carries counts.
 
     python fixtures/generate.py   # regenerate fixtures (deterministic; CI checks freshness)
     sh gates/run.sh               # every live gate green, every twin red for its planted reason
+    bin/meridian serve --feed fixtures/base/feed.jsonl   # read-only gRPC: Head / AsOf / Reconcile (api/meridian/v1/read.proto)
 
 Claim state is in [STATUS.md](STATUS.md).
 

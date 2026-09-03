@@ -84,7 +84,7 @@ examined, per locked decision 5):
 |---|---|---|
 | `head_matches_local` | 2 (records, prefix_hash) | each field of `Head` that differs from `feed.Open` on the base feed |
 | `snapshot_rehash_matches_claimed` | 3 (V1, V2, V3) | viewpoints where `sha256(snapshot bytes) != snapshot_hash` |
-| `snapshot_matches_local_recompute` | 3 (V1, V2, V3) | viewpoints where the received bytes are not byte-equal to `asof.Read(base, V).Bytes` (bytes, not hashes; `seq` must also equal V) |
+| `snapshot_matches_local_recompute` | 3 (V1, V2, V3) | viewpoints where the received bytes are not byte-equal to `asof.Read(base, V).Bytes` (bytes, not hashes; `seq` and `prefix_hash` must also equal the local values). Amended 2026-09-03 at final review: the `prefix_hash` leg was missing from the original table. |
 | `reconcile_matches_local` | local `compared` (11 on the base fixture: cash + 2 fields x 5 instruments) | size of the symmetric difference between the server's mismatch set and the local one over `fixtures/base/statement.json` at `end_seq`, plus 1 if `compared` differs |
 
 Live cell: `FeedReader{fixtures/base/feed.jsonl}`. Every check 0. Scope
