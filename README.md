@@ -90,9 +90,11 @@ MERIDIAN is an instrument of **DATUM** — a shared reference frame for
 checkable financial-data claims: [VANTAGE](https://github.com/hossainpazooki/vantage)
 produces point-in-time SEC fundamentals, [PARALLAX](https://github.com/hossainpazooki/parallax)
 adversarially re-derives them from the consumer side, and
-[BASELINE](https://hossainpazooki.github.io/baseline) is the public catalog of
-dated, replayable verdicts. MERIDIAN re-lands that discipline in portfolio
-accounting; its verdicts are emitted in BASELINE's row schema so they can
-register into the catalog once earned.
+[BASELINE](https://hossainpazooki.github.io/baseline) is the ledger of
+dated, replayable verdicts from that gate. MERIDIAN re-lands the discipline
+in portfolio accounting. The shared thing across these repos is the row and
+the crediting rule, not a page: DATUM is the governing text for that
+discipline, and MERIDIAN's verdict rows are emitted in its shape. Conformance
+to DATUM's checker is planned, not yet built; nothing registers into BASELINE.
 
 Design and reasoning: [docs/2026-08-31-design.md](docs/2026-08-31-design.md).
