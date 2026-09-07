@@ -22,3 +22,7 @@ session writes a new entry, never edits an old one.
 - [2026-09-03 -- p7-closed](2026-09-03-p7-closed.md) -- everything landed on
   `main` at `014992e` (PRs #1-#3 merged); clean anchor for the next pick-up;
   next = BASELINE registration of the seven cells.
+- [2026-09-06 -- datum-adoption-seed](2026-09-06-datum-adoption-seed.md) -- seed
+  for another session, nothing run here: BASELINE registration RETIRED by
+  the DATUM ruling (datum `91be859`); next = design/STATUS amendments now,
+  pack vendoring + `gate_sha` emitter change once the pack exists.
