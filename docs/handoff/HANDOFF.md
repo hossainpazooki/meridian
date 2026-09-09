@@ -27,3 +27,8 @@ session writes a new entry, never edits an old one.
   operator ruling under the family's private governing text; next =
   design/STATUS amendments now, pack vendoring + `gate_sha` emitter change
   once the pack exists.
+- [2026-09-09 -- conformance-adopted](2026-09-09-conformance-adopted.md) --
+  pack vendored under `gates/datum/`, emitter writes `schema` /
+  `gate_sha` / `gate_worktree`, checker red for exactly five reasons per
+  row before and green (7 CLAIMABLE) after, STATUS table generated; ALL
+  UNCOMMITTED, `PIN` waits on one commit in the governing text's repo.
