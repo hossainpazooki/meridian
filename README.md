@@ -84,6 +84,32 @@ never carries counts.
 
 Claim state is in [STATUS.md](STATUS.md).
 
+## Conformance
+
+Verdict rows are emitted in a shared row shape whose specification is
+vendored under `gates/datum/` (a JSON schema, a reference checker, the
+checker's own negative controls, and a fixture corpus), hash-bound file by
+file to one commit of the governing text by `gates/datum/PIN`. `gates/run.sh`
+runs the pack's self-test before the gates and its checker over `gates/out`
+after them, with the pin verified; the checker's claimability per surface
+must agree with `gates/claimability.py`, and the claimability table in
+STATUS.md is generated from the rows and compared in CI, never typed.
+
+    node gates/datum/test.mjs --mutate                # the checker's own controls
+    node gates/datum/check.mjs gates/out --verify-pin # the rows, against the pinned pack
+
+What the pack enforces by machine: the row is the record (one shape, no
+extra keys, no status literal); every gate ships a twin and is credited
+only when the twin is red for exactly its planted reason, every twin
+included; status is derived from rows; identity is content hash plus
+emitter commit plus worktree state under emitter-neutral names. The
+governing text's remaining rules (three outcomes, checker self-controls,
+pushed-sha claims, hash-bound hand copies, probed effects, threshold
+provenance, scope walls, dated corrections) are not machine-checked by the
+pack; this repo's conformance to them is authored, in STATUS.md, and
+labelled as such. The pinned commit is in `gates/datum/PIN`; this README
+carries no revision.
+
 ## Lineage
 
 MERIDIAN belongs to a family of instruments for checkable financial-data

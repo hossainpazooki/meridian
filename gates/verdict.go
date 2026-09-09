@@ -180,10 +180,16 @@ func emitWith(t failer, r Row) {
 	if runner == "" {
 		runner = "local"
 	}
+	// The shared row: gates/datum/gate-verdict.v1.json is the specification,
+	// gates/datum/check.mjs refuses anything outside it (run.sh runs it over
+	// gates/out). gate_sha / gate_worktree are the emitter's own commit and
+	// tree state under emitter-neutral names; until 2026-09-09 they were
+	// written under keys named for another project.
 	row := map[string]any{
-		"kind": "GATE_VERDICT", "surface": fmt.Sprintf("meridian-lane1-p%d", r.Prop), "lane": 1, "cell": r.Cell,
+		"schema": "datum/gate-verdict/1",
+		"kind":   "GATE_VERDICT", "surface": fmt.Sprintf("meridian-lane1-p%d", r.Prop), "lane": 1, "cell": r.Cell,
 		"result": result, "checks": r.Counts.Checks, "evaluated": r.Counts.Evaluated, "rows": r.Rows, "scope": r.Scope,
-		"params": r.Params, "parallax_sha": sha, "parallax_worktree": wt, "content_hash": r.ContentHash,
+		"params": r.Params, "gate_sha": sha, "gate_worktree": wt, "content_hash": r.ContentHash,
 		"content_hash_basis": r.Basis, "ran_at": now.Format("2006-01-02T15:04:05.000000Z"), "runner": runner,
 	}
 	if r.Cell == "twin" {

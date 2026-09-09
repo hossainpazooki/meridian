@@ -32,9 +32,12 @@ func TestEmitWritesBaselineSchemaAndEnforcesCells(t *testing.T) {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		want := "cell checks content_hash content_hash_basis evaluated kind lane parallax_sha parallax_worktree params ran_at result rows runner scope surface"
+		// The shared row (gates/datum/gate-verdict.v1.json): emitter-neutral
+		// gate_sha / gate_worktree, and a schema key so a checker can refuse
+		// a row from a version it does not know. Sorted, as keys() sorts.
+		want := "cell checks content_hash content_hash_basis evaluated gate_sha gate_worktree kind lane params ran_at result rows runner schema scope surface"
 		if strings.Contains(f, "-twin-") {
-			want = "cell checks content_hash content_hash_basis evaluated kind lane parallax_sha parallax_worktree params planted ran_at result rows runner scope surface"
+			want = "cell checks content_hash content_hash_basis evaluated gate_sha gate_worktree kind lane params planted ran_at result rows runner schema scope surface"
 		}
 		if strings.Join(keys, " ") != want {
 			t.Fatalf("%s keys: %s", f, strings.Join(keys, " "))
@@ -45,8 +48,11 @@ func TestEmitWritesBaselineSchemaAndEnforcesCells(t *testing.T) {
 		if strings.Contains(f, "-live-") && m["result"] != "GREEN" || strings.Contains(f, "-twin-") && m["result"] != "RED" {
 			t.Fatal(m["result"])
 		}
-		if len(m["parallax_sha"].(string)) != 40 || (m["parallax_worktree"] != "clean" && m["parallax_worktree"] != "dirty") {
+		if len(m["gate_sha"].(string)) != 40 || (m["gate_worktree"] != "clean" && m["gate_worktree"] != "dirty") {
 			t.Fatal(m)
+		}
+		if m["schema"] != "datum/gate-verdict/1" {
+			t.Fatalf("schema: %v", m["schema"])
 		}
 	}
 }
