@@ -1,0 +1,32 @@
+{
+  "case": "a twin without a plant is not a twin",
+  "expect": "FAIL",
+  "expect_reason": "planted required on twin",
+  "row": {
+    "schema": "datum/gate-verdict/1",
+    "kind": "GATE_VERDICT",
+    "surface": "example-lane1-p1",
+    "lane": 1,
+    "cell": "twin",
+    "result": "RED",
+    "checks": {
+      "duplicate_absorbed": 0,
+      "collision_refused": 1
+    },
+    "evaluated": {
+      "duplicate_absorbed": 1,
+      "collision_refused": 1
+    },
+    "scope": "fixtures/base with one planted same-key collision",
+    "params": {
+      "viewpoint": 71
+    },
+    "content_hash": "sha256:3fcfb3c3c28a0c28f3dc3e454b89767461f34fa6431238f58633c4bad8a31b65",
+    "content_hash_basis": "sha256 of canonical snapshot bytes",
+    "gate_sha": "a087ab2c60981f166df6161ead505907e529bf44",
+    "gate_worktree": "clean",
+    "ran_at": "2026-09-09T00:00:00Z",
+    "runner": "local",
+    "rows": 71
+  }
+}

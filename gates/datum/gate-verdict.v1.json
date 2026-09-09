@@ -1,0 +1,51 @@
+{
+  "$comment": "DATUM GATE_VERDICT row, schema v1. Keywords are restricted to the subset conformance/check.mjs implements: type, enum, pattern, required, properties, additionalProperties, minimum, minProperties. Cross-field rules (unevaluable_reason iff UNEVALUABLE, planted iff twin, evaluated keys equal checks keys, zero denominator forces UNEVALUABLE, live/twin colour rules, plant match, status literals) live in check.mjs and are listed in conformance/reasons.md.",
+  "type": "object",
+  "required": [
+    "schema", "kind", "surface", "lane", "cell", "result", "checks", "evaluated",
+    "scope", "params", "content_hash", "content_hash_basis", "gate_sha",
+    "gate_worktree", "ran_at", "runner"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "type": "string", "enum": ["datum/gate-verdict/1"] },
+    "kind": { "type": "string", "enum": ["GATE_VERDICT"] },
+    "surface": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "lane": { "type": "integer", "minimum": 1 },
+    "cell": { "type": "string", "enum": ["live", "twin"] },
+    "result": { "type": "string", "enum": ["GREEN", "RED", "UNEVALUABLE"] },
+    "unevaluable_reason": { "type": "string" },
+    "checks": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "evaluated": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "planted": {
+      "type": "object",
+      "required": ["mutation", "mutated_rows", "expected_violations"],
+      "additionalProperties": false,
+      "properties": {
+        "mutation": { "type": "string", "pattern": "." },
+        "mutated_rows": { "type": "integer", "minimum": 0 },
+        "expected_violations": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "scope": { "type": "string" },
+    "params": { "type": "object" },
+    "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "content_hash_basis": { "type": "string" },
+    "gate_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "gate_worktree": { "type": "string", "enum": ["clean", "dirty"] },
+    "ran_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$" },
+    "runner": { "type": "string", "pattern": "." },
+    "rows": { "type": "integer", "minimum": 0 },
+    "metrics": { "type": "object" }
+  }
+}

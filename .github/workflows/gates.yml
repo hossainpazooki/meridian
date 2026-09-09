@@ -28,6 +28,11 @@ jobs:
           # against the checked-in fixtures, and only then move the pin --
           # never bump it and let CI be the first place that finds out.
           python-version: "3.14"
+      - uses: actions/setup-node@v4
+        with:
+          # The vendored conformance pack under gates/datum/ is Node with no
+          # dependencies; 20 is the floor its design names.
+          node-version: "20"
       - name: run gates
         env:
           MERIDIAN_RUNNER: github-actions
