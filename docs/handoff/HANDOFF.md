@@ -24,5 +24,6 @@ session writes a new entry, never edits an old one.
   next = BASELINE registration of the seven cells.
 - [2026-09-06 -- datum-adoption-seed](2026-09-06-datum-adoption-seed.md) -- seed
   for another session, nothing run here: BASELINE registration RETIRED by
-  the DATUM ruling (datum `91be859`); next = design/STATUS amendments now,
-  pack vendoring + `gate_sha` emitter change once the pack exists.
+  operator ruling under the family's private governing text; next =
+  design/STATUS amendments now, pack vendoring + `gate_sha` emitter change
+  once the pack exists.

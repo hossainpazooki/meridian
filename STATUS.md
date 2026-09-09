@@ -51,8 +51,9 @@ claimable anywhere unless it is claimable here.
   right bytes under the wrong `snapshot_hash`. Design:
   `docs/2026-09-03-grpc-read-api-design.md`.
 
-- **2026-09-06** -- **BASELINE registration retired; DATUM adoption
-  planned.** The "copy, not a translation" premise was measured: all 18
+- **2026-09-06** -- **BASELINE registration retired; conformance to the
+  governing text planned.** The "copy, not a translation" premise was
+  measured: all 18
   rows from the 2026-09-06T16:53Z run, renamed to BASELINE's filename rule
   and hash-bound in a scratch source file, are refused by BASELINE's
   `check-ledger.mjs` at baseline `775978f` (every row: `rows must equal
@@ -60,15 +61,20 @@ claimable anywhere unless it is claimable here.
   checker; P4, P6, P7: `second twin cell`, the checker holds one twin per
   surface and lane), and `build.mjs` refuses a second surface. Evidence:
   `docs/learnings/2026-09-06-baseline-checker-refuses-meridian-rows.md`.
-  The operator then ruled that BASELINE is not a catalog and that DATUM
-  (`~/dev/datum`, `91be859`) governs MERIDIAN. Nothing in this repo's
-  gates changed: `sh gates/run.sh` at `a087ab2` still ends
-  `ok lane1 claimable=7/7` over 18 rows, and CI run 33817051877 on
-  `a087ab2` is green. **Not built:** the DATUM conformance pack does not
-  exist yet (`~/dev/datum/conformance/` absent), so vendoring it, the
+  The operator then ruled that BASELINE is not a catalog and that MERIDIAN
+  is governed by **DATUM**, a private governing text for the operator's
+  data-platform repositories (one discipline, one verdict-row schema, a
+  conformance pack each governed repo vendors at a pinned revision). It is
+  not public, so this file cites it for the ruling and for nothing else.
+  Nothing in this repo's gates changed: `sh gates/run.sh` at `a087ab2`
+  still ends `ok lane1 claimable=7/7` over 18 rows, and CI run 33817051877
+  on `a087ab2` is green. **Not built:** the governing text's conformance
+  pack does not exist yet, so vendoring it, the
   `gate_sha`/`gate_worktree`/`schema` emitter change, and the generated
   claimability block are all planned and blocked on it. Seed:
-  `docs/handoff/2026-09-06-datum-adoption-seed.md`.
+  `docs/handoff/2026-09-06-datum-adoption-seed.md`. *Reworded 2026-09-09:
+  the governing text's private location and revision were removed from
+  this entry; the ruling and the plan are unchanged.*
 
 ## Crediting rule
 
@@ -98,9 +104,10 @@ copy, not a translation. *Corrected 2026-09-06: the schema sentence holds
 (live-row key set equals BASELINE's 16 keys exactly); the registration
 clause does not -- BASELINE's checker refuses the rows and the operator
 retired registration (see the 2026-09-06 entry). The rows' target is now
-the DATUM conformance pack, which keeps these field names except
-`parallax_sha`/`parallax_worktree` (renamed `gate_sha`/`gate_worktree`,
-DATUM rule 6) and adds a `schema` key; that emitter change is not made.*
+the governing text's conformance pack, which keeps these field names except
+`parallax_sha`/`parallax_worktree` (renamed to the emitter-neutral
+`gate_sha`/`gate_worktree`) and adds a `schema` key; that emitter change is
+not made.*
 
 ## Claimability -- Lane 1 (local, Go core)
 
@@ -245,8 +252,8 @@ would falsify it.
 - gRPC read API -- **resolved** 2026-09-03: built read-only as P7; see the
   dated entry above and `docs/2026-09-03-grpc-read-api-design.md`.
 - BASELINE registration of the claimable cells -- **retired** 2026-09-06 by
-  operator ruling (BASELINE is not a catalog); replaced by DATUM conformance,
-  planned and blocked on the pack. See the dated entry above.
+  operator ruling (BASELINE is not a catalog); replaced by conformance to the
+  governing text, planned and blocked on its pack. See the dated entry above.
 - Cross-language byte-identical twin -- v2 candidate once the snapshot format
   is stable.
 - Whether `canon.Marshal` should ever accept non-ASCII (it refuses today, by

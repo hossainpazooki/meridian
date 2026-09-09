@@ -86,15 +86,16 @@ Claim state is in [STATUS.md](STATUS.md).
 
 ## Lineage
 
-MERIDIAN is an instrument of **DATUM** — a shared reference frame for
-checkable financial-data claims: [VANTAGE](https://github.com/hossainpazooki/vantage)
-produces point-in-time SEC fundamentals, [PARALLAX](https://github.com/hossainpazooki/parallax)
+MERIDIAN belongs to a family of instruments for checkable financial-data
+claims: [VANTAGE](https://github.com/hossainpazooki/vantage) produces
+point-in-time SEC fundamentals, [PARALLAX](https://github.com/hossainpazooki/parallax)
 adversarially re-derives them from the consumer side, and
 [BASELINE](https://hossainpazooki.github.io/baseline) is the ledger of
 dated, replayable verdicts from that gate. MERIDIAN re-lands the discipline
 in portfolio accounting. The shared thing across these repos is the row and
-the crediting rule, not a page: DATUM is the governing text for that
-discipline, and MERIDIAN's verdict rows are emitted in its shape. Conformance
-to DATUM's checker is planned, not yet built; nothing registers into BASELINE.
+the crediting rule, not a page. That discipline is written down once, in
+**DATUM**, a private governing text; conformance to its checker is planned,
+not yet built, and nothing registers into BASELINE. Everything this repo
+claims is checkable from this repo alone.
 
 Design and reasoning: [docs/2026-08-31-design.md](docs/2026-08-31-design.md).
