@@ -32,3 +32,7 @@ session writes a new entry, never edits an old one.
   `gate_sha` / `gate_worktree`, checker red for exactly five reasons per
   row before and green (7 CLAIMABLE) after, STATUS table generated; ALL
   UNCOMMITTED, `PIN` waits on one commit in the governing text's repo.
+- [2026-09-10 -- conformance-pinned](2026-09-10-conformance-pinned.md) -- the
+  pack's pin was committed EMPTY and CI on `main` went red at `--verify-pin`
+  (nothing mis-credited: exit 2, unevaluable); pin rewritten under a guard
+  and verified against the vendored bytes, uncommitted; next = commit it.
