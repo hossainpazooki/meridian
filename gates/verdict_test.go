@@ -32,7 +32,7 @@ func TestEmitWritesBaselineSchemaAndEnforcesCells(t *testing.T) {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		// The shared row (gates/datum/gate-verdict.v1.json): emitter-neutral
+		// The shared row (gates/conformance/gate-verdict.v1.json): emitter-neutral
 		// gate_sha / gate_worktree, and a schema key so a checker can refuse
 		// a row from a version it does not know. Sorted, as keys() sorts.
 		want := "cell checks content_hash content_hash_basis evaluated gate_sha gate_worktree kind lane params ran_at result rows runner schema scope surface"

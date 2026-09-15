@@ -1,6 +1,15 @@
 {
-  "case": "two surfaces each with their own live row",
+  "case": "a live UNEVALUABLE beside a twin RED as planted that sets only one of the live checks nonzero: the group derives UNEVALUABLE, never PARTIAL, and per-check crediting names nothing, since a live that could not be evaluated reported no checks to credit",
   "expect": "PASS",
+  "expect_credit": [
+    {
+      "surface": "example-lane1-p1",
+      "lane": 1,
+      "status": "UNEVALUABLE",
+      "live": "UNEVALUABLE",
+      "twins": 1
+    }
+  ],
   "rows": [
     {
       "schema": "datum/gate-verdict/1",
@@ -8,13 +17,13 @@
       "surface": "example-lane1-p1",
       "lane": 1,
       "cell": "live",
-      "result": "GREEN",
+      "result": "UNEVALUABLE",
       "checks": {
         "duplicate_absorbed": 0,
         "collision_refused": 0
       },
       "evaluated": {
-        "duplicate_absorbed": 1,
+        "duplicate_absorbed": 0,
         "collision_refused": 1
       },
       "scope": "fixtures/base, all 71 records",
@@ -27,24 +36,25 @@
       "gate_worktree": "clean",
       "ran_at": "2026-09-09T00:00:00Z",
       "runner": "local",
-      "rows": 71
+      "rows": 71,
+      "unevaluable_reason": "price feed absent for 2 of 2 instruments"
     },
     {
       "schema": "datum/gate-verdict/1",
       "kind": "GATE_VERDICT",
-      "surface": "example-lane1-p2",
+      "surface": "example-lane1-p1",
       "lane": 1,
-      "cell": "live",
-      "result": "GREEN",
+      "cell": "twin",
+      "result": "RED",
       "checks": {
         "duplicate_absorbed": 0,
-        "collision_refused": 0
+        "collision_refused": 1
       },
       "evaluated": {
         "duplicate_absorbed": 1,
         "collision_refused": 1
       },
-      "scope": "fixtures/base, all 71 records",
+      "scope": "fixtures/base with one planted same-key collision",
       "params": {
         "viewpoint": 71
       },
@@ -54,7 +64,15 @@
       "gate_worktree": "clean",
       "ran_at": "2026-09-09T00:00:00Z",
       "runner": "local",
-      "rows": 71
+      "rows": 71,
+      "planted": {
+        "mutation": "collision_payload",
+        "mutated_rows": 1,
+        "expected_violations": {
+          "duplicate_absorbed": 0,
+          "collision_refused": 1
+        }
+      }
     }
   ]
 }

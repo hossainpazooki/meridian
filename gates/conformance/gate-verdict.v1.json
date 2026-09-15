@@ -1,5 +1,5 @@
 {
-  "$comment": "DATUM GATE_VERDICT row, schema v1. Keywords are restricted to the subset conformance/check.mjs implements: type, enum, pattern, required, properties, additionalProperties, minimum, minProperties. Cross-field rules (unevaluable_reason iff UNEVALUABLE, planted iff twin, evaluated keys equal checks keys, zero denominator forces UNEVALUABLE, live/twin colour rules, plant match, status literals) live in check.mjs and are listed in conformance/reasons.md.",
+  "$comment": "GATE_VERDICT row, schema v1. Keywords are restricted to the subset conformance/check.mjs implements: type, enum, pattern, required, properties, additionalProperties, minimum, minProperties. Cross-field rules (unevaluable_reason iff UNEVALUABLE, planted iff twin, evaluated keys equal checks keys, zero denominator forces UNEVALUABLE, live/twin colour rules, plant match, status literals) live in check.mjs and are listed in conformance/reasons.md.",
   "type": "object",
   "required": [
     "schema", "kind", "surface", "lane", "cell", "result", "checks", "evaluated",

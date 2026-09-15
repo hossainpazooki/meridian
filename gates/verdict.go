@@ -180,8 +180,8 @@ func emitWith(t failer, r Row) {
 	if runner == "" {
 		runner = "local"
 	}
-	// The shared row: gates/datum/gate-verdict.v1.json is the specification,
-	// gates/datum/check.mjs refuses anything outside it (run.sh runs it over
+	// The shared row: gates/conformance/gate-verdict.v1.json is the specification,
+	// gates/conformance/check.mjs refuses anything outside it (run.sh runs it over
 	// gates/out). gate_sha / gate_worktree are the emitter's own commit and
 	// tree state under emitter-neutral names; until 2026-09-09 they were
 	// written under keys named for another project.

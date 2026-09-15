@@ -30,8 +30,8 @@ jobs:
           python-version: "3.14"
       - uses: actions/setup-node@v4
         with:
-          # The vendored conformance pack under gates/datum/ is Node with no
-          # dependencies; 20 is the floor its design names.
+          # The vendored conformance pack under gates/conformance/ is Node
+          # with no dependencies; 20 is the floor its design names.
           node-version: "20"
       - name: run gates
         env:

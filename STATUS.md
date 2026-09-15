@@ -86,7 +86,7 @@ claimable anywhere unless it is claimable here.
   exactly five refusals per row (missing `schema`, `gate_sha`,
   `gate_worktree`; unknown `parallax_sha`, `parallax_worktree`) and
   nothing else; `TestEmit` was made red on the new key list; `Emit` in
-  `gates/verdict.go` now writes `schema: datum/gate-verdict/1` and the
+  `gates/verdict.go` now writes the row's `schema` identifier and the
   emitter's commit and tree state as `gate_sha` / `gate_worktree`; the
   same checker over the regenerated rows exits 0 with seven surfaces
   CLAIMABLE and twin counts 1/1/1/2/1/3/2, the table `claimability.py`
@@ -104,13 +104,77 @@ claimable anywhere unless it is claimable here.
   pack; no MERIDIAN row has been copied into the pack's real-fixture
   corpus (that copy needs rows emitted from a clean tree at a pushed sha).
   Learnings: `docs/learnings/2026-09-09-emitter-writes-the-shared-row.md`.
+  *Corrected 2026-09-15: none of the three "Not yet" items holds any
+  longer. The pin was written in `35142fa` (`fix: write the pack pin, CI
+  was red on an empty pin`, 2026-09-10). CI run
+  [34438961409](https://github.com/hossainpazooki/meridian/actions/runs/34438961409),
+  a push to `main` at `97d815c`, a descendant of `35142fa`, succeeded and
+  printed `ok 18 rows conform, 7 surfaces` and `ok conformance pack agrees:
+  claimable=7` from the pack's steps. The pack re-vendored on 2026-09-15
+  carries one P7 live and one P7 twin row of this repo in its real-fixture
+  corpus, byte-identical to the rows this repo emitted with `gate_sha`
+  `97d815c` and `gate_worktree` clean.*
+  *Moved 2026-09-15: the pack now lives under `gates/conformance/`, pinned
+  by `gates/conformance/PIN`, and the count-only agreement check described
+  above is replaced by a property-by-property comparison; see the
+  2026-09-15 entry. The paths above are the record of where it was.*
+  *Reworded 2026-09-15: a schema identifier literal was removed from this
+  entry; the fact is unchanged.*
+
+- **2026-09-15** -- **Conformance pack re-vendored; both derivations
+  credit per check.** The pack was re-vendored from a pushed commit of the
+  governing text into `gates/conformance/`, the directory the pack's own
+  self-test builds as the shape a governed repo ships; the previous
+  vendored directory was deleted. The commit is the first line of
+  `gates/conformance/PIN` and is not repeated here. Order of events, each
+  measured: the vendored tree was diffed against an archive of that commit
+  (no difference; the schema file, placed beside `check.mjs`, compared
+  byte for byte on its own); `--verify-pin` refused before the pin existed
+  (`PIN missing beside check.mjs`, exit 2) and, after `--write-pin`, alone
+  printed `ok pin verified`; the vendored self-test printed `ok
+  conformance: 19 positive, 50 negative, 2 real, 20 reasons, 16 rules
+  mutated, 1 crediting rule mutated`.
+
+  The re-vendored pack credits per check (see Crediting rule). Over the 18
+  rows emitted at `97d815c`, before `gates/claimability.py` changed, the
+  pack derived CLAIMABLE for P5 and P7 only, while `gates/claimability.py`
+  printed `ok lane1 claimable=7/7`: the two derivations disagreed.
+  `gates/claimability.py` then gained a `--self-test`, run failing against
+  its previous derivation first, and after it the same per-check rule,
+  `--json` and `--agree`; its generated table gained an Unfalsified column.
+  `gates/run.sh` now verifies the pin alone before the pack's self-test,
+  runs `claimability.py --self-test` before the gates, runs the pack over
+  the rows with `--verify-pin --expect gates/expect.json` (every surface
+  and its exact twin mutations), and fails unless both derivations give
+  every property the same status and the same unfalsified checks, printing
+  both sides when they do not. No Go code, fixture or verdict-row field
+  changed. `sh gates/run.sh` exited 0; its last 12 lines, unedited:
+
+      ok lane1 claimable=2/7
+      == conformance pack over the rows
+      meridian-lane1-p1 lane1 PARTIAL (live GREEN, 1 twin; unfalsified: positions_match_manifest, unevaluable_match_manifest)
+      meridian-lane1-p2 lane1 PARTIAL (live GREEN, 1 twin; unfalsified: chain_verifies, fresh_process_identical, pinned_hash_match)
+      meridian-lane1-p3 lane1 PARTIAL (live GREEN, 1 twin; unfalsified: positions_match_manifest, three_histories, unevaluable_match_manifest, viewpoint_V1, viewpoint_V3)
+      meridian-lane1-p4 lane1 PARTIAL (live GREEN, 2 twins; unfalsified: positions_match_manifest)
+      meridian-lane1-p5 lane1 CLAIMABLE (live GREEN, 1 twin)
+      meridian-lane1-p6 lane1 PARTIAL (live GREEN, 3 twins; unfalsified: unevaluable_match_golden)
+      meridian-lane1-p7 lane1 CLAIMABLE (live GREEN, 2 twins)
+      ok 18 rows conform, 7 surfaces
+      == agreement
+      ok conformance pack agrees: claimable=2
 
 ## Crediting rule
 
-A property is **CLAIMABLE** only when both halves hold, as mechanically
-enforced by `gates/claimability.py` (which independently re-derives each
-verdict from the row's own contents rather than trusting the row's `result`
-label) and, at emit time, by `Emit` in `gates/verdict.go`:
+A property is **CLAIMABLE** only when all three halves below hold, as
+mechanically enforced by `gates/claimability.py` (which independently
+re-derives each verdict from the row's own contents rather than trusting
+the row's `result` label) and by the vendored conformance pack, whose
+derivation `gates/run.sh` requires to agree with it property by property.
+`Emit` in `gates/verdict.go` also refuses, at emit time, a row that breaks
+a per-row condition of the first two halves (no checks, a missing
+denominator, a RED live, a twin not RED as planted); it writes one row at a
+time, so exactly one live row per property is enforced only by the two
+derivations:
 
 - **Live** -- exactly one live row for the property, with `result` GREEN. A
   live row whose `checks` map is empty, or that carries any check with a
@@ -120,6 +184,17 @@ label) and, at emit time, by `Emit` in `gates/verdict.go`:
   to its `planted.expected_violations` (full dict equality, over the union of
   both key sets, so an expectation with no computed check and a computed check
   with no expectation are both refusals), and at least one check non-zero.
+- **Per check** -- every check key the live row reports is set nonzero by
+  at least one twin row that is RED as planted. A live check that no such
+  twin drives nonzero is **unfalsified**: its 0 has never been shown able
+  to be anything else. Any unfalsified check makes the property
+  **PARTIAL**, never CLAIMABLE, and is named in the generated table below.
+  A property with an UNEVALUABLE row, its live row included, derives
+  **UNEVALUABLE** and is not credited per check at all.
+
+*Corrected 2026-09-15: this rule had two halves until the per-check half
+was added by operator ruling; both derivations enforce it as of the
+2026-09-15 entry. `Emit` writes one row at a time, so it cannot apply it.*
 
 **P4 and P7 have two twins each and P6 has three, and all of them must hold** -- one red
 twin does not credit a property that plants three defects. A gate that has
@@ -139,21 +214,22 @@ the governing text's conformance pack, which keeps these field names except
 not made.* *Corrected 2026-09-09: the emitter change is made; see the
 2026-09-09 entry. Rows carry `schema`, `gate_sha`, `gate_worktree`; the
 vendored pack under `gates/datum/` checks every row in `gates/run.sh`.*
+*Moved 2026-09-15: the vendored pack is now under `gates/conformance/`.*
 
 ## Claimability -- Lane 1 (local, Go core)
 
 <!-- meridian:claimability:begin -->
 generated by `python gates/claimability.py gates/out --render` from the rows of one run; `gates/run.sh` compares it with `--check STATUS.md`
 
-| # | Property | Live | Twin | Status |
-|---|---|---|---|---|
-| P1 | At-most-once fill ingestion | GREEN | RED | CLAIMABLE |
-| P2 | Deterministic replay, byte-identical snapshot | GREEN | RED | CLAIMABLE |
-| P3 | PIT-correct corporate actions (incl. amendment) | GREEN | RED | CLAIMABLE |
-| P4 | Fail-closed valuation (2 twins) | GREEN | RED | CLAIMABLE |
-| P5 | Reconciliation proven able to fail | GREEN | RED | CLAIMABLE |
-| P6 | Portfolio math (average cost, P&L) (3 twins) | GREEN | RED | CLAIMABLE |
-| P7 | Wire fidelity of the gRPC read API (2 twins) | GREEN | RED | CLAIMABLE |
+| # | Property | Live | Twin | Status | Unfalsified |
+|---|---|---|---|---|---|
+| P1 | At-most-once fill ingestion | GREEN | RED | PARTIAL | `positions_match_manifest`, `unevaluable_match_manifest` |
+| P2 | Deterministic replay, byte-identical snapshot | GREEN | RED | PARTIAL | `chain_verifies`, `fresh_process_identical`, `pinned_hash_match` |
+| P3 | PIT-correct corporate actions (incl. amendment) | GREEN | RED | PARTIAL | `positions_match_manifest`, `three_histories`, `unevaluable_match_manifest`, `viewpoint_V1`, `viewpoint_V3` |
+| P4 | Fail-closed valuation (2 twins) | GREEN | RED | PARTIAL | `positions_match_manifest` |
+| P5 | Reconciliation proven able to fail | GREEN | RED | CLAIMABLE | - |
+| P6 | Portfolio math (average cost, P&L) (3 twins) | GREEN | RED | PARTIAL | `unevaluable_match_golden` |
+| P7 | Wire fidelity of the gRPC read API (2 twins) | GREEN | RED | CLAIMABLE | - |
 <!-- meridian:claimability:end -->
 
 Every RED above is red **for its planted reason with its exact planted
@@ -169,6 +245,10 @@ P4's twins are `silent_zero_and_stale_carry_forward` and
 `price_plus_one` and `invented_untraded_position`. P7's are
 `wrong_feed_served_as_base` and `hash_field_mislabeled`.
 
+The Unfalsified column is generated with the rest of the table: for each
+property, the checks its live row reports that no twin RED as planted sets
+nonzero. A name there is what holds that property at PARTIAL.
+
 ## Honest limits
 
 Measured facts about what the seven cells above do and do not establish. These
@@ -181,7 +261,8 @@ review** -- so they are checkable rather than merely asserted. The
 sixth (no production claim) is not a finding at all: it is a scope wall
 declared in `docs/2026-08-31-design.md` section 6 before any code existed, and
 it is checkable a different way -- by the absence of anything in the repo that
-would falsify it.
+would falsify it. *Noted 2026-09-15: the third bullet's list of unfalsified
+checks is now the pack's own output over the rows, pasted there.*
 
 - **P5 demonstrates CROSS-IMPLEMENTATION AGREEMENT, not independent
   verification.** The Python naive fold is a **same-contract
@@ -202,17 +283,34 @@ would falsify it.
   in `internal/feed/feed.go` states four such limits with the reasoning and the
   measured shapes; read it there rather than trusting a summary.
 
-- **Three checks are never falsified anywhere in the build**:
-  `fresh_process_identical` (P2 -- the determinism claim's own headline check),
-  `three_histories` (P3), and `unevaluable_match_golden` (P6). Each reads 0 in
-  every cell of every gate, so by this project's own rule its 0 is not
-  evidence. Each now has a test proving that its **comparator discriminates**
-  -- driven with knowingly different inputs, it reports the difference
-  (`TestReplaysIdenticalDiscriminates`, `TestP3ThreeHistoriesDiscriminates`,
-  `TestSetEqualityOverUniverseTable`). That is **not** the same as a twin
-  proving the **ledger can produce the defect**. No non-determinism was
-  planted into the fold, deliberately; what is demonstrated is that the check
-  could report one, not that the system could commit one.
+- **Live checks that no twin of their own property drives nonzero.** *Corrected
+  2026-09-15: this bullet said three checks were never falsified anywhere
+  in the build (`fresh_process_identical`, `three_histories`,
+  `unevaluable_match_golden`). That undercounted. The re-vendored pack, over
+  the 18 rows emitted at `97d815c`, names these live checks unfalsified --
+  set nonzero by no twin RED as planted -- per property (excerpt: lines 1-4
+  and 6 of the output of `node gates/conformance/check.mjs gates/out
+  --verify-pin --expect gates/expect.json`):*
+
+      meridian-lane1-p1 lane1 PARTIAL (live GREEN, 1 twin; unfalsified: positions_match_manifest, unevaluable_match_manifest)
+      meridian-lane1-p2 lane1 PARTIAL (live GREEN, 1 twin; unfalsified: chain_verifies, fresh_process_identical, pinned_hash_match)
+      meridian-lane1-p3 lane1 PARTIAL (live GREEN, 1 twin; unfalsified: positions_match_manifest, three_histories, unevaluable_match_manifest, viewpoint_V1, viewpoint_V3)
+      meridian-lane1-p4 lane1 PARTIAL (live GREEN, 2 twins; unfalsified: positions_match_manifest)
+      meridian-lane1-p6 lane1 PARTIAL (live GREEN, 3 twins; unfalsified: unevaluable_match_golden)
+
+  Each reads 0 in its property's live row and reads 0, or is absent, in
+  every twin row of that property (`unevaluable_match_manifest` is set
+  nonzero only by a P4 twin, which credits nothing for P1 or P3), so by this
+  project's own rule
+  its 0 is not evidence, and under per-check crediting each holds its
+  property at PARTIAL. The three named before each have a test proving that
+  its **comparator discriminates** -- driven with knowingly different
+  inputs, it reports the difference (`TestReplaysIdenticalDiscriminates`,
+  `TestP3ThreeHistoriesDiscriminates`, `TestSetEqualityOverUniverseTable`).
+  That is **not** the same as a twin proving the **ledger can produce the
+  defect**. No non-determinism was planted into the fold, deliberately; what
+  is demonstrated is that the check could report one, not that the system
+  could commit one.
 
 - **Fixture reproducibility is interpreter-dependent.** The fixtures were
   generated on **Python 3.14**, the only interpreter on the build machine, and
@@ -261,6 +359,14 @@ would falsify it.
   proto-fresh line) and
   `ok lane1 claimable=7/7` with the P7 row, so the codegen pin and the
   seven cells reproduce on Linux as well as Windows.
+  *Noted 2026-09-15: P7 derives CLAIMABLE under per-check crediting, and
+  that does not reach (5). Crediting reads one integer per check key, and
+  `p7Check` in `gates/p7_test.go` folds both head fields (`records` and
+  `prefix_hash`) into `head_matches_local`, and the mismatch-list
+  difference plus the `compared` field into `reconcile_matches_local`. The
+  wrong-feed twin sets both keys nonzero through their other legs (it keeps
+  the record count, per `fixtures/generate.py`), so both keys are credited
+  while the `records` and `compared` legs stay undriven.*
 
 - **No production claim.** Synthetic, versioned fixtures only. The ledger has
   run nowhere that matters, against no market data, no custodian, and no
@@ -289,6 +395,10 @@ would falsify it.
 - BASELINE registration of the claimable cells -- **retired** 2026-09-06 by
   operator ruling (BASELINE is not a catalog); replaced by conformance to the
   governing text, planned and blocked on its pack. See the dated entry above.
+  *Corrected 2026-09-15: neither planned nor blocked any longer. The pack is
+  vendored (see the 2026-09-09 entry), its pin was written in `35142fa`, and
+  it runs in `gates/run.sh` from `gates/conformance/` (see the 2026-09-15
+  entry).*
 - Cross-language byte-identical twin -- v2 candidate once the snapshot format
   is stable.
 - Whether `canon.Marshal` should ever accept non-ASCII (it refuses today, by

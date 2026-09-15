@@ -1,0 +1,37 @@
+{
+  "cell": "live",
+  "checks": {
+    "head_matches_local": 0,
+    "reconcile_matches_local": 0,
+    "snapshot_matches_local_recompute": 0,
+    "snapshot_rehash_matches_claimed": 0
+  },
+  "content_hash": "sha256:9d353431b4c4b627174682847e0a10d71d4e0f7c2a21459d53b40628033120ce",
+  "content_hash_basis": "sha256 of canonical snapshot bytes as received by the gRPC client",
+  "evaluated": {
+    "head_matches_local": 2,
+    "reconcile_matches_local": 11,
+    "snapshot_matches_local_recompute": 3,
+    "snapshot_rehash_matches_claimed": 3
+  },
+  "gate_sha": "97d815c9d95b9bac7a85f69b1cc66f6e5310f45e",
+  "gate_worktree": "clean",
+  "kind": "GATE_VERDICT",
+  "lane": 1,
+  "params": {
+    "end_seq": 71,
+    "listener": "bufconn",
+    "viewpoints": {
+      "V1": 21,
+      "V2": 47,
+      "V3": 71
+    }
+  },
+  "ran_at": "2026-09-14T22:00:41.287249Z",
+  "result": "GREEN",
+  "rows": 5,
+  "runner": "local",
+  "schema": "datum/gate-verdict/1",
+  "scope": "gRPC client over bufconn vs local recompute, fixtures/base",
+  "surface": "meridian-lane1-p7"
+}

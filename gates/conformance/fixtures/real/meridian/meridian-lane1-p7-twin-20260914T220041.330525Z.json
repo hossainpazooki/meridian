@@ -1,0 +1,47 @@
+{
+  "cell": "twin",
+  "checks": {
+    "head_matches_local": 1,
+    "reconcile_matches_local": 2,
+    "snapshot_matches_local_recompute": 3,
+    "snapshot_rehash_matches_claimed": 0
+  },
+  "content_hash": "sha256:daf5fb33a03cf289ddf764095e7a0a62f106709c31fd8f35c05f0975de84bd41",
+  "content_hash_basis": "sha256 of canonical snapshot bytes as received by the gRPC client (twin server)",
+  "evaluated": {
+    "head_matches_local": 2,
+    "reconcile_matches_local": 11,
+    "snapshot_matches_local_recompute": 3,
+    "snapshot_rehash_matches_claimed": 3
+  },
+  "gate_sha": "97d815c9d95b9bac7a85f69b1cc66f6e5310f45e",
+  "gate_worktree": "clean",
+  "kind": "GATE_VERDICT",
+  "lane": 1,
+  "params": {
+    "end_seq": 71,
+    "listener": "bufconn",
+    "viewpoints": {
+      "V1": 21,
+      "V2": 47,
+      "V3": 71
+    }
+  },
+  "planted": {
+    "expected_violations": {
+      "head_matches_local": 1,
+      "reconcile_matches_local": 2,
+      "snapshot_matches_local_recompute": 3,
+      "snapshot_rehash_matches_claimed": 0
+    },
+    "mutated_rows": 1,
+    "mutation": "wrong_feed_served_as_base"
+  },
+  "ran_at": "2026-09-14T22:00:41.330525Z",
+  "result": "RED",
+  "rows": 5,
+  "runner": "local",
+  "schema": "datum/gate-verdict/1",
+  "scope": "gRPC client over bufconn vs local recompute; server reads fixtures/p2/mutated as if it were fixtures/base",
+  "surface": "meridian-lane1-p7"
+}

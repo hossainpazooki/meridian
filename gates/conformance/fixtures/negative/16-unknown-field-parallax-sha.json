@@ -1,5 +1,5 @@
 {
-  "case": "the pre-DATUM emitter key is an additional property",
+  "case": "an emitter key from before this pack existed is an additional property",
   "expect": "FAIL",
   "expect_reason": "schema: unknown field parallax_sha",
   "row": {
