@@ -36,3 +36,9 @@ session writes a new entry, never edits an old one.
   pack's pin was committed EMPTY and CI on `main` went red at `--verify-pin`
   (nothing mis-credited: exit 2, unevaluable); pin rewritten under a guard
   and verified against the vendored bytes, uncommitted; next = commit it.
+- [2026-09-15 -- conformance-re-vendored](2026-09-15-conformance-re-vendored.md) --
+  pack re-vendored under `gates/conformance/` from a pushed commit and
+  re-pinned; both derivations credit per check and agree property by
+  property (`ok conformance pack agrees: claimable=2`); five properties
+  PARTIAL on unfalsified checks; ALL UNCOMMITTED; next = commit, then twins
+  (or rulings) for the unfalsified checks.

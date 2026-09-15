@@ -44,8 +44,9 @@ flowchart LR
     S1 <-. "field-level reconcile<br/>exact, zero tolerance" .-> C
 ```
 
-Six properties, each claimable only when its live gate is green **and** its
-known-bad twin is red for exactly the planted reason:
+The properties, each claimable only when its live gate is green, **every**
+known-bad twin is red for exactly its planted reason, **and** every check the
+live gate reports has been driven nonzero by at least one of those twins:
 
 1. **At-most-once ingestion** — duplicate fills are absorbed; a same-key,
    different-payload collision is a durable refusal, not a downstream surprise.
@@ -60,6 +61,11 @@ known-bad twin is red for exactly the planted reason:
    instrument and the amount.
 6. **Portfolio math** — average-cost basis and realized/unrealized P&L as fold
    state, matched to a hand-computed golden fixture to the cent.
+7. **Wire fidelity of the gRPC read API** — what a client receives matches a
+   local recompute: `Head` on its record count and prefix hash, `AsOf` on its
+   sequence, prefix hash and snapshot bytes, and `Reconcile` on its compared
+   count and its mismatches, compared as a multiset; a server serving the wrong
+   feed as base, or a snapshot under a mislabeled hash, is caught.
 
 Claim state lives in [STATUS.md](STATUS.md) — the state of record; this README
 never carries counts.
@@ -86,29 +92,47 @@ Claim state is in [STATUS.md](STATUS.md).
 
 ## Conformance
 
-Verdict rows are emitted in a shared row shape whose specification is
-vendored under `gates/datum/` (a JSON schema, a reference checker, the
-checker's own negative controls, and a fixture corpus), hash-bound file by
-file to one commit of the governing text by `gates/datum/PIN`. `gates/run.sh`
-runs the pack's self-test before the gates and its checker over `gates/out`
-after them, with the pin verified; the checker's claimability per surface
-must agree with `gates/claimability.py`, and the claimability table in
-STATUS.md is generated from the rows and compared in CI, never typed.
-
-    node gates/datum/test.mjs --mutate                # the checker's own controls
-    node gates/datum/check.mjs gates/out --verify-pin # the rows, against the pinned pack
-
-What the pack enforces by machine: the row is the record (one shape, no
-extra keys, no status literal); every gate ships a twin and is credited
-only when the twin is red for exactly its planted reason, every twin
-included; status is derived from rows; identity is content hash plus
-emitter commit plus worktree state under emitter-neutral names. The
-governing text's remaining rules (three outcomes, checker self-controls,
-pushed-sha claims, hash-bound hand copies, probed effects, threshold
-provenance, scope walls, dated corrections) are not machine-checked by the
-pack; this repo's conformance to them is authored, in STATUS.md, and
-labelled as such. The pinned commit is in `gates/datum/PIN`; this README
+Verdict rows are emitted in a shared row shape. Its specification (a JSON
+schema), a reference checker, the checker's own negative controls and a
+fixture corpus are vendored under `gates/conformance/`, bound file by file,
+by sha256, to one pushed commit of a private governing text (see Lineage)
+by `gates/conformance/PIN`. The pinned commit is in that file; this README
 carries no revision.
+
+`gates/run.sh` runs, in this order: the pin, verified by the vendored
+checker before any other vendored code runs; the checker's self-test, rule mutation included; the
+self-test of `gates/claimability.py`; the gates, which write fresh rows into
+`gates/out`; both derivations of claimability over those rows,
+`gates/claimability.py` and the pack, the pack with the pin verified again
+and with `gates/expect.json` naming every surface and its exact twin
+mutations; and the agreement step, which fails unless both derivations give
+every property the same status and name the same unfalsified checks. The
+claimability table in STATUS.md is generated from the rows and compared in
+CI, never typed.
+
+    node gates/conformance/check.mjs --verify-pin      # the vendored bytes are the pinned ones
+    node gates/conformance/test.mjs --mutate           # the checker's own controls
+    python gates/claimability.py --self-test           # the second derivation's own controls
+    node gates/conformance/check.mjs gates/out --verify-pin --expect gates/expect.json
+
+Crediting is per check. A property is claimable only when its live row is
+green, every twin row is red for exactly its planted reason, and every check
+the live row reports has been set nonzero by at least one of those twins. A
+check that no such twin drives nonzero is unfalsified: its zero in the live
+row has never been shown able to be anything else, so it holds the property
+short of claimable, and both derivations name it. A property with an
+unevaluable row is unevaluable, and none of its checks is credited.
+
+What the pack checks by machine: every row has exactly the specified shape,
+with no missing or unknown keys and no status word typed into it, and
+carries its content hash, the emitting commit and that commit's worktree
+state; a twin is red only for exactly its planted counts; a surface has at
+most one live row and no repeated twin mutation; a red live row or a green
+twin is refused for a human to look at; the surfaces and twin mutations are
+exactly the expected ones; and the vendored files are exactly the pinned
+ones. Status is derived from rows, never authored. The governing text's
+other rules are not machine-checked by the pack, and this README does not
+claim conformance to them.
 
 ## Lineage
 
@@ -120,8 +144,8 @@ adversarially re-derives them from the consumer side, and
 dated, replayable verdicts from that gate. MERIDIAN re-lands the discipline
 in portfolio accounting. The shared thing across these repos is the row and
 the crediting rule, not a page. That discipline is written down once, in
-**DATUM**, a private governing text; conformance to its checker is planned,
-not yet built, and nothing registers into BASELINE. Everything this repo
-claims is checkable from this repo alone.
+DATUM, a private governing text; this repo vendors its conformance pack and
+runs it in `gates/run.sh` (see Conformance), and nothing registers into
+BASELINE. Everything this repo claims is checkable from this repo alone.
 
 Design and reasoning: [docs/2026-08-31-design.md](docs/2026-08-31-design.md).
